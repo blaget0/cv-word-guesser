@@ -2,10 +2,14 @@ import cv2 as cv
 import numpy as np
 import matplotlib.pyplot as plt
 from math import ceil
+import base64
 
 
-def crop_image(path):
-    src = cv.imread(path)
+def crop_image(data):
+    decoded_data = base64.b64decode(data)
+    np_data = np.fromstring(decoded_data,np.uint8)
+    src = cv.imdecode(np_data,cv.IMREAD_UNCHANGED)
+    #src = cv.imread(path)
 
     src_gray = cv.cvtColor(src, cv.COLOR_BGR2GRAY)
     #src_gray = cv.blur(src_gray, (3,3))

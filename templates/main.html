@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image and Text Upload</title>
+    <script>
+        function encodeImageFileAsURL(element) {
+            let file = element.files[0];
+            let reader = new FileReader();
+            reader.onloadend = function() {
+                let base64String = reader.result.replace("data:", "").replace(/^.+,/, "");
+                document.getElementById("base64Input").value = base64String;
+                document.getElementById("uploadedImage").src = reader.result;
+            }
+            reader.readAsDataURL(file);
+        }
+
+        function sendPostRequest() {
+            let base64String = document.getElementById("base64Input").value;
+            let textString = document.getElementById("textInput").value;
+            let data = {
+                image: base64String,
+                text: textString
+            };
+
+            fetch('/upload', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            }).then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    alert('Error: ' + response.statusText);
+                }
+            }).then(data => {
+                if (data) {
+                    document.getElementById("displayText").innerText = data.text;
+                    document.getElementById("uploadedImage").src = "data:image/png;base64," + data.image;
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+    <h1>Upload image and word</h1>
+    <input type="file" id="fileInput" onchange="encodeImageFileAsURL(this)">
+    <br><br>
+    <label for="textInput">Word:</label>
+    <input type="text" id="textInput">
+    <input type="hidden" id="base64Input">
+    <br><br>
+    <button onclick="sendPostRequest()">Send</button>
+    <br><br>
+    <label>Result: </label>
+    <p id="displayText">{{ stored_text }}</p>
+</body>
+</html>

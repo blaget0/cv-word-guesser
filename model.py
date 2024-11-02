@@ -74,12 +74,13 @@ class Model(nn.Module):
 
 t0 = time.time()
 
-def predict(image_path, model_path, word):
+def predict(data, model_path, word):
+
     model = torch.load(model_path, weights_only=False)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
 
-    image = crop.crop_image(image_path)
+    image = crop.crop_image(data)
     image = torch.FloatTensor(image).to(device)
     image = image.unsqueeze(0).unsqueeze(0).repeat(2,1,1,1)
 
