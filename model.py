@@ -74,9 +74,14 @@ class Model(nn.Module):
 
 t0 = time.time()
 
+<<<<<<< HEAD
 def predict(data, model_path, word):
 
     model = torch.load(model_path, weights_only=False)
+=======
+def predict(image_path, model_path, word):
+    model = torch.load(model_path, weights_only=False, map_location=torch.device('cpu'))
+>>>>>>> 044a0a42fb63dca2d7e8be73f81baf38aa5e7013
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
 
@@ -94,7 +99,7 @@ def predict(data, model_path, word):
     return prob[index].detach().item()
 
 
-if __name__ == '__main__':  
+if __name__ == '__main__':
     hidden_sizes = [128, 100, 64]
     output_size = len(classes)
 

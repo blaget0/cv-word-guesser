@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guess the Word</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        input[type="file"], input[type="text"] {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 10px 0;
+            width: calc(100% - 22px);
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .message {
+            color: red;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .image-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .image-card {
+            margin: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .image-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
+        .button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Угадайте слово!</h1>
+
+        <div class="message" id="message"></div>
+
+        <form id="uploadForm">
+            <input type="file" name="file" required>
+            <button type="submit">Загрузить изображение</button>
+        </form>
+
+        <form id="guessForm">
+            <input type="text" name="guess" placeholder="Введите ваше слово" required>
+            <button type="submit">Угадать слово</button>
+        </form>
+
+        <h2>Оставшиеся попытки: <span id="attempts">10</span></h2>
+
+        <div class="image-container" id="uploadedImagesContainer">
+            <!-- Загруженные изображения будут добавляться сюда -->
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async function (event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                document.getElementById('attempts').innerText = data.attempts;
+
+                // Добавляем изображение и его вероятность на страницу
+                const imgContainer = document.getElementById('uploadedImagesContainer');
+                const imgCard = `
+                    <div class="image-card">
+                        <img src="/static/uploads/${data.uploaded_images[data.uploaded_images.length - 1][0]}" alt="Загруженное изображение">
+                        <p>Вероятность: ${data.uploaded_images[data.uploaded_images.length - 1][1]}</p>
+                    </div>
+                `;
+                // Вставляем новое изображение в начало контейнера
+                imgContainer.insertAdjacentHTML('afterbegin', imgCard);
+
+                if (data.game_over) {
+                    document.getElementById('message').innerText = `Вы не угадали! Загаданное слово: ${data.correct_word}`;
+                }
+            } else {
+                document.getElementById('message').innerText = data.error;
+            }
+        });
+
+        document.getElementById('guessForm').addEventListener('submit', async function (event) {
+            event.preventDefault();
+            const guess = this.guess.value;
+
+            const response = await fetch('/guess', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ guess: guess })
+            });
+
+            const data = await response.json();
+            document.getElementById('message').innerText = data.message;
+            document.getElementById('attempts').innerText = data.attempts || '0';
+
+            if (data.game_over) {
+                document.getElementById('message').innerText += ` Загаданное слово: ${data.correct_word}`;
+            }
+        });
+    </script>
+</body>
+</html>
