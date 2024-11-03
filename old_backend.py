@@ -10,7 +10,7 @@ stored_text = ""
 @app.route('/')
 def index():
     global stored_text
-    return render_template('main.html', stored_text=stored_text, uploaded_image="")
+    return render_template('old.html', stored_text=stored_text, uploaded_image="")
 
 @app.route('/upload', methods=['POST'])
 def upload():

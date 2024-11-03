@@ -26,33 +26,38 @@ def reset_game():
 @app.route('/upload', methods=['POST'])
 def upload_file():
     """Обрабатывает загрузку файла изображения."""
+
+    file = request.form.get('base64String')
+
+    '''
     if 'file' not in request.files:
         return jsonify({'error': 'Нет файла для загрузки!'}), 400
-
-    file = request.files['file']
+    
     if file.filename == '':
         return jsonify({'error': 'Нет выбранного файла!'}), 400
 
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
-    file.save(file_path)
+    #file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+    #file.save(file_path)
 
-    if not os.path.exists(file_path):
-        return jsonify({'error': 'Ошибка: файл не был сохранён!'}), 400
+    #if not os.path.exists(file_path):
+    #    return jsonify({'error': 'Ошибка: файл не был сохранён!'}), 400
+    '''
 
     # Уменьшаем количество попыток сразу после загрузки файла
     session['attempts'] -= 1
 
     try:
-        image = cv2.imread(file_path)
-        if image is None:
-            return jsonify({'error': 'Ошибка: не удалось загрузить изображение!'}), 400
+        #image = cv2.imread(file_path)
+        #if image is None:
+        #    return jsonify({'error': 'Ошибка: не удалось загрузить изображение!'}), 400
 
         model_path = 'model.pt'
-        probability = predict(file_path, model_path, session['correct_word'])
-        probability = str(round(probability, 4) * 100) + "%"
+        probability = predict(file, model_path, session['correct_word'])
+        probability = str(probability) + " %"
 
-        # Сохраняем информацию о загруженном изображении и его вероятности
-        session['uploaded_images'].append((file.filename, probability, image_to_base64(image)))
+        # Сохраняем информацию о загруженном изображении и его вероятности (здесь пока только вероятность, т. к. сохранять в сессии инфу о всех изображениях невозможно,
+        # сессия хранится поверх куки, а у куки слишком маленький размер, идея - сохранять маленькую версию картинки)
+        session['uploaded_images'].append(("placeholder", probability))
 
         # Проверка состояния игры
         game_over = session['attempts'] < 1
@@ -81,7 +86,7 @@ def guess():
     if user_guess == session['correct_word']:
         return jsonify({'message': 'Вы выиграли!', 'game_over': True, 'correct_word': session['correct_word']})
 
-    session['attempts'] -= 2  # Уменьшаем попытки только при неверном угадывании
+    session['attempts'] -= 1  # Уменьшаем попытки только при неверном угадывании
     if session['attempts'] < 1:
         return jsonify({'message': 'Вы не угадали!', 'game_over': True, 'correct_word': session['correct_word']})
 

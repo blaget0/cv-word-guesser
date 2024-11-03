@@ -74,6 +74,19 @@
             font-size: 16px;
         }
     </style>
+
+    <script>
+        function encodeImageFileAsURL(element) {
+            let file = element.files[0];
+            let reader = new FileReader();
+            reader.onloadend = function() {
+                let base64String = reader.result.replace("data:", "").replace(/^.+,/, "");
+                document.getElementById("base64Input").value = base64String;
+                document.getElementById("uploadedImage").src = reader.result;
+            }
+            reader.readAsDataURL(file);
+        }
+    </script>
 </head>
 <body>
     <div class="container">
@@ -82,7 +95,8 @@
         <div class="message" id="message"></div>
 
         <form id="uploadForm">
-            <input type="file" name="file" required>
+            <input type="file" name="file" required id="fileInput" onchange="encodeImageFileAsURL(this)">
+            <input type="hidden" id="base64Input">
             <button type="submit">Загрузить изображение</button>
         </form>
 
@@ -101,7 +115,9 @@
     <script>
         document.getElementById('uploadForm').addEventListener('submit', async function (event) {
             event.preventDefault();
+            let base64String = document.getElementById("base64Input").value;
             const formData = new FormData(this);
+            formData.append("base64String", base64String);
             const response = await fetch('/upload', {
                 method: 'POST',
                 body: formData
